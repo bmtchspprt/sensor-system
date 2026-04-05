@@ -1,10 +1,10 @@
-body { display: flex; margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; background: #fff; }
-#side-menu { width: 300px; background: #f0f0f0; padding: 20px; border-right: 1px solid #ccc; overflow-y: auto; }
-h2 { color: #b23a3a; font-size: 1.4em; margin-top: 0; border-bottom: 3px solid #b23a3a; }
-.ltx-group { background: white; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
-.active-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-label { display: block; font-size: 11px; font-weight: bold; margin-top: 10px; color: #555; }
-select, input { width: 100%; padding: 6px; margin-top: 4px; border: 1px solid #ccc; }
-#map-btn { width: 100%; padding: 15px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; border-radius: 4px; }
-#map-btn:hover { background: #8e2e2e; }
-#networkCanvas { flex-grow: 1; background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90px, #eee 1px, transparent 1px); background-size: 20px 20px; }
+body { display: flex; margin: 0; font-family: Arial, sans-serif; height: 100vh; background: #fff; }
+#side-menu { width: 300px; background: #f4f4f4; padding: 20px; border-right: 1px solid #ccc; overflow-y: auto; }
+h2 { color: #b23a3a; border-bottom: 2px solid #b23a3a; padding-bottom: 10px; }
+.ltx-group { background: white; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; }
+.active-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+label { display: block; font-size: 12px; font-weight: bold; margin-top: 10px; }
+select, input { width: 100%; padding: 5px; margin-top: 4px; border: 1px solid #ccc; }
+#map-btn { width: 100%; padding: 15px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+#download-btn { width: 100%; padding: 10px; background: #333; color: white; border: none; margin-top: 10px; cursor: pointer; }
+#networkCanvas { flex-grow: 1; }
