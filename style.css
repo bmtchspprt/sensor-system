@@ -1,4 +1,44 @@
-body { display: flex; margin: 0; font-family: sans-serif; height: 100vh; }
-#side-menu { width: 320px; background: #fdfdfd; padding: 20px; border-right: 1px solid #ccc; overflow-y: auto; }
-#networkCanvas { flex-grow: 1; touch-action: none; }
-.ltx-group { background: white; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; }
+body {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#side-menu {
+    width: 320px;
+    background: #f9f9f9;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+#networkCanvas {
+    flex-grow: 1;
+}
+
+.ltx-group {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #b23a3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #8e2e2e;
+}
