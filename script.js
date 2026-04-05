@@ -55,4 +55,26 @@ function generateMap() {
                 } else {
                     // Vertical Daisy Chain to sensor above
                     const aboveBottom = sY - 50; 
-                    canvas.add(new fabric.Line([sX + 32, sY, sX + 3
+                    canvas.add(new fabric.Line([sX + 32, sY, sX + 32, aboveBottom], { stroke: 'black', strokeWidth: 5 }));
+                    drawJunction(sX + 32, aboveBottom);
+                }
+                
+                drawJunction(sX + 32, sY); // Junction on top of current sensor
+                canvas.add(sensor);
+            }
+        }
+    });
+}
+
+function drawArchedLink(x1, x2, y, labelText) {
+    const midX = (x1 + x2) / 2;
+    const curveTop = y - 80;
+    const path = new fabric.Path(`M ${x1} ${y} Q ${midX} ${curveTop} ${x2} ${y}`, {
+        fill: '', stroke: CYAN, strokeWidth: 6, strokeDashArray: [10, 5]
+    });
+    // Explicitly using only the passed labelText (LoRa)
+    const label = new fabric.Text(labelText, { 
+        fontSize: 26, fontWeight: 'bold', fill: CYAN, left: midX - 35, top: curveTop - 25 
+    });
+    canvas.add(path, label);
+}
