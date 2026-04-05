@@ -1,51 +1,9 @@
-body {
-    display: flex;
-    margin: 0;
-    font-family: sans-serif;
-    height: 100vh;
-    overflow: hidden;
-}
-
-#side-menu {
-    width: 300px;
-    background: #f4f4f4;
-    padding: 15px;
-    border-right: 1px solid #ccc;
-    overflow-y: auto;
-}
-
-h2 { font-size: 1.2em; border-bottom: 2px solid #8b0000; padding-bottom: 5px; }
-
-.ltx-group {
-    background: #fff;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-left: 5px solid #8b0000;
-    border-radius: 4px;
-}
-
-label { display: block; font-size: 0.8em; margin-top: 8px; }
-select, input { width: 100%; margin-top: 4px; }
-
-#map-btn {
-    width: 100%;
-    padding: 10px;
-    background: #8b0000;
-    color: white;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 10px;
-}
-
-#download-btn {
-    width: 100%;
-    padding: 10px;
-    background: #444;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-#networkCanvas {
-    flex-grow: 1;
-}
+body { display: flex; margin: 0; font-family: 'Arial', sans-serif; height: 100vh; background: #fff; }
+#side-menu { width: 320px; background: #eeeeee; padding: 20px; border-right: 2px solid #ccc; overflow-y: auto; z-index: 10; }
+h2 { color: #b23a3a; margin-top: 0; border-bottom: 2px solid #b23a3a; }
+.ltx-group { background: white; padding: 15px; margin-bottom: 20px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+label { display: block; font-size: 11px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+select, input { width: 100%; padding: 6px; margin-top: 4px; border: 1px solid #bbb; }
+#map-btn { width: 100%; padding: 15px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+#download-btn { width: 100%; padding: 10px; background: #444; color: white; border: none; cursor: pointer; margin-top: 10px; }
+canvas { border-left: 1px solid #ccc; }
