@@ -2,47 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Config Tool</title>
+    <title>LTX Network Mapper</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 <body>
     <div id="side-menu">
         <h2>Network Config</h2>
-        <button onclick="generateMap()">MAP</button>
+        <button id="map-btn">MAP</button>
         <hr>
         
         <div class="ltx-group">
-            <label><input type="checkbox" id="active-Home" checked> <strong>LTX Home</strong></label>
-            <p>Sensors: <input type="number" id="count-Home" value="0" min="0" max="6"></p>
-            <p>Type: 
-                <select id="type-Home">
-                    <option value="NCR">NCR</option>
-                </select>
-            </p>
-            <p>Link: 
-                <select id="link-Home">
-                    <option value="Cellular">Cellular</option>
-                    <option value="Ethernet">Ethernet</option>
-                </select>
-            </p>
+            <div class="active-row">
+                <strong>LTX Home</strong>
+                <input type="checkbox" id="active-Home" checked>
+            </div>
+            <label>Sensors:</label>
+            <input type="number" id="count-Home" value="0" min="0">
+            <label>Link Type:</label>
+            <select id="link-Home">
+                <option value="Cellular">Cellular</option>
+                <option value="Ethernet">Ethernet</option>
+            </select>
         </div>
 
         <div class="ltx-group">
-            <label><input type="checkbox" id="active-2" checked> <strong>LTX 2</strong></label>
-            <p>Sensors: <input type="number" id="count-2" value="6" min="0" max="6"></p>
-            <p>Type: 
-                <select id="type-2">
-                    <option value="NCR">NCR</option>
-                </select>
-            </p>
-            <p>Link: 
-                <select id="link-2">
-                    <option value="LoRa to Home">LoRa to Home</option>
-                    <option value="Wired">Wired</option>
-                </select>
-            </p>
+            <div class="active-row">
+                <strong>LTX 2</strong>
+                <input type="checkbox" id="active-2" checked>
+            </div>
+            <label>Sensors:</label>
+            <input type="number" id="count-2" value="6" min="0">
+            <label>Link Type:</label>
+            <select id="link-2">
+                <option value="LoRa to Home">LoRa to Home</option>
+                <option value="Wired">Wired</option>
+            </select>
         </div>
     </div>
 
