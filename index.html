@@ -2,21 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LTX Network Mapper</title>
+    <title>LTX Sensor Mapper</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 <body>
     <div id="side-menu">
         <h2>Network Config</h2>
-        <div id="ltx-inputs">
-            </div>
-        <button onclick="generateMap()" id="map-btn">Map Network</button>
+        <div id="ltx-inputs"></div>
+        <button onclick="generateMap()" id="map-btn">MAP</button>
         <button onclick="downloadPNG()" id="download-btn">Download PNG</button>
     </div>
     <canvas id="networkCanvas"></canvas>
-
     <script src="script.js"></script>
 </body>
 </html>
