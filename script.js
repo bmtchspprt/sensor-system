@@ -1,12 +1,11 @@
 const canvas = new fabric.Canvas('networkCanvas', {
-    width: window.innerWidth - 300,
+    width: window.innerWidth - 320,
     height: window.innerHeight,
     backgroundColor: '#ffffff'
 });
 
 const MAROON = '#b23a3a';
-const CYAN_SENSOR = '#00adef';
-const PROTOCOL_COLORS = { 'Modbus': 'black', 'HART': 'orange', '4-20': 'green', 'SmartBob': 'yellow' };
+const CYAN = '#00adef';
 
 const ltxConfigs = [
     { id: 'Home', label: 'LTX Home', links: ['Cellular', 'Ethernet'] },
@@ -24,7 +23,12 @@ function initMenu() {
                     <strong>${ltx.label}</strong>
                     <input type="checkbox" id="active-${ltx.id}" ${ltx.id === 'Home' || ltx.id === '2' ? 'checked' : ''}>
                 </div>
-                <label>Sensors:</label><input type="number" id="count-${ltx.id}" value="3">
+                <label>Number of Sensors:</label>
+                <input type="number" id="count-${ltx.id}" value="3">
+                <label>Sensor Type:</label>
+                <select id="type-${ltx.id}"><option>NCR</option><option>CNCR</option><option>SmartBob</option><option>HerdStar</option></select>
+                <label>Protocol:</label>
+                <select id="proto-${ltx.id}"><option>Modbus</option><option>4-20</option><option>HART</option><option>SmartBob</option></select>
                 <label>Link Type:</label>
                 <select id="link-${ltx.id}">${ltx.links.map(l => `<option>${l}</option>`).join('')}</select>
             </div>`;
@@ -32,17 +36,15 @@ function initMenu() {
 }
 
 function createLTX(x, y, label, linkType) {
-    const rect = new fabric.Rect({ width: 180, height: 100, fill: MAROON, originX: 'center' });
-    const text = new fabric.Text(label, { fontSize: 24, fontWeight: 'bold', fill: 'black', top: 35, originX: 'center' });
+    const rect = new fabric.Rect({ width: 220, height: 120, fill: MAROON, originX: 'center' });
+    const text = new fabric.Text(label, { fontSize: 32, fontWeight: 'bold', fill: 'black', top: 40, originX: 'center' });
     
-    // Antenna - Welded to the box group
     const antCount = (linkType === 'Cellular') ? 2 : 1;
     const antennas = [];
     for(let i=0; i<antCount; i++) {
         antennas.push(new fabric.Rect({
-            width: 10, height: 25, fill: 'black', top: -25,
-            left: (antCount === 2) ? (i === 0 ? -40 : 40) : 40,
-            originX: 'center'
+            width: 14, height: 30, fill: 'black', top: -30,
+            left: (antCount === 2) ? (i === 0 ? -50 : 50) : 50, originX: 'center'
         }));
     }
 
@@ -51,21 +53,18 @@ function createLTX(x, y, label, linkType) {
     return group;
 }
 
-function drawArchedLink(objStart, objEnd, labelText) {
-    const x1 = objStart.left + 90;
-    const x2 = objEnd.left + 90;
-    const y = 100;
+function drawArchedLink(x1, x2, y, labelText) {
     const midX = (x1 + x2) / 2;
-
-    const path = new fabric.Path(`M ${x1} ${y} Q ${midX} ${y - 60} ${x2} ${y}`, {
-        fill: '', stroke: CYAN_SENSOR, strokeWidth: 4, strokeDashArray: [8, 4], selectable: true
+    const path = new fabric.Path(`M ${x1} ${y} Q ${midX} ${y - 80} ${x2} ${y}`, {
+        fill: '', stroke: CYAN, strokeWidth: 6, strokeDashArray: [10, 5], selectable: true
     });
-
-    const label = new fabric.Text(labelText, {
-        fontSize: 18, fontWeight: 'bold', fill: CYAN_SENSOR, left: midX - 20, top: y - 55
-    });
-
+    const label = new fabric.Text(labelText, { fontSize: 24, fontWeight: 'bold', fill: CYAN, left: midX - 30, top: y - 75 });
     canvas.add(path, label);
+}
+
+function drawJunction(x, y) {
+    const circle = new fabric.Circle({ radius: 8, fill: 'black', left: x, top: y, originX: 'center', originY: 'center' });
+    canvas.add(circle);
 }
 
 function generateMap() {
@@ -74,37 +73,46 @@ function generateMap() {
     const active = ltxConfigs.filter(c => document.getElementById(`active-${c.id}`).checked);
 
     active.forEach((config, idx) => {
-        const xPos = 100 + (idx * 300);
+        const xPos = 100 + (idx * 350);
         const link = document.getElementById(`link-${config.id}`).value;
         const ltx = createLTX(xPos, 120, config.label, link);
         ltxObjs[config.id] = ltx;
 
-        // Connections to Internet or Home
         if (config.id !== 'Home' && link === 'LoRa to Home' && ltxObjs['Home']) {
-            drawArchedLink(ltx, ltxObjs['Home'], 'LoRa');
+            drawArchedLink(ltx.left + 110, ltxObjs['Home'].left + 110, 120, 'LoRa');
         } else if (config.id === 'Home' && link === 'Cellular') {
-            drawArchedLink(ltx, {left: ltx.left + 180}, 'Cellular');
+            drawArchedLink(ltx.left + 110, ltx.left + 300, 120, 'Cellular');
         }
 
-        // T-Junction Bus Logic
         const count = parseInt(document.getElementById(`count-${config.id}`).value);
-        const busY = 280;
+        const proto = document.getElementById(`proto-${config.id}`).value;
+        const sType = document.getElementById(`type-${config.id}`).value;
         
-        // Vertical Drop from LTX
-        canvas.add(new fabric.Line([xPos + 90, 220, xPos + 90, busY], { stroke: 'black', strokeWidth: 4 }));
-        // Horizontal Bus Line
-        canvas.add(new fabric.Line([xPos, busY, xPos + 180, busY], { stroke: 'black', strokeWidth: 4 }));
+        const busY = 320;
+        const wireColor = (proto === 'Modbus') ? 'black' : (proto === 'HART' ? 'orange' : 'green');
+
+        // Main Drop from LTX
+        canvas.add(new fabric.Line([xPos + 110, 240, xPos + 110, busY], { stroke: wireColor, strokeWidth: 5 }));
+        drawJunction(xPos + 110, 240);
+        drawJunction(xPos + 110, busY);
+
+        // Horizontal Bus
+        canvas.add(new fabric.Line([xPos, busY, xPos + 220, busY], { stroke: wireColor, strokeWidth: 5 }));
+        drawJunction(xPos, busY);
+        drawJunction(xPos + 220, busY);
 
         for (let i = 0; i < count; i++) {
-            const sX = xPos + (i * 65) - 20;
-            const sY = busY + 30;
+            const sX = xPos + (i * 80) - 30;
+            const sY = busY + 80;
 
             const sensor = new fabric.Group([
-                new fabric.Rect({ width: 45, height: 75, fill: CYAN_SENSOR }),
-                new fabric.Text(`NCR ${i+1}`, { fontSize: 10, angle: 90, left: 30, top: 10 })
+                new fabric.Rect({ width: 60, height: 100, fill: CYAN }),
+                new fabric.Text(`${sType} ${i+1}`, { fontSize: 13, angle: 90, left: 48, top: 15, fontWeight: 'bold' })
             ], { left: sX, top: sY });
 
-            canvas.add(new fabric.Line([sX + 22, sY, sX + 22, busY], { stroke: 'black', strokeWidth: 3 }));
+            canvas.add(new fabric.Line([sX + 30, sY, sX + 30, busY], { stroke: wireColor, strokeWidth: 5 }));
+            drawJunction(sX + 30, busY);
+            drawJunction(sX + 30, sY);
             canvas.add(sensor);
         }
     });
