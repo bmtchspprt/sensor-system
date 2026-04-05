@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LTX Network Mapper</title>
+    <title>Network Config Tool</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
@@ -13,12 +13,12 @@
         <hr>
         
         <div class="ltx-group">
-            <div class="active-row">
+            <div class="header-row">
                 <strong>LTX Home</strong>
                 <input type="checkbox" id="active-Home" checked>
             </div>
             <label>Sensors:</label>
-            <input type="number" id="count-Home" value="0" min="0">
+            <input type="number" id="count-Home" value="0" min="0" max="8">
             <label>Link Type:</label>
             <select id="link-Home">
                 <option value="Cellular">Cellular</option>
@@ -27,12 +27,12 @@
         </div>
 
         <div class="ltx-group">
-            <div class="active-row">
+            <div class="header-row">
                 <strong>LTX 2</strong>
                 <input type="checkbox" id="active-2" checked>
             </div>
             <label>Sensors:</label>
-            <input type="number" id="count-2" value="6" min="0">
+            <input type="number" id="count-2" value="6" min="0" max="8">
             <label>Link Type:</label>
             <select id="link-2">
                 <option value="LoRa to Home">LoRa to Home</option>
