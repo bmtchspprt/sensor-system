@@ -1,9 +1,10 @@
-body { display: flex; margin: 0; font-family: 'Arial', sans-serif; height: 100vh; background: #fff; }
-#side-menu { width: 320px; background: #fdfdfd; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; }
-h2 { color: #b23a3a; border-bottom: 2px solid #b23a3a; padding-bottom: 5px; margin-top: 0; }
-.ltx-group { background: #fff; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
-.active-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-label { display: block; font-size: 11px; font-weight: bold; margin-top: 8px; color: #444; }
-select, input { width: 100%; padding: 4px; margin-top: 2px; border: 1px solid #ccc; }
-#map-btn { width: 100%; padding: 15px; background: #b23a3a; color: white; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
-#download-btn { width: 100%; padding: 10px; background: #333; color: white; border: none; margin-top: 10px; cursor: pointer; }
+body { display: flex; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; background: #fff; }
+#side-menu { width: 320px; background: #fdfdfd; padding: 20px; border-right: 1px solid #ccc; overflow-y: auto; z-index: 10; }
+h2 { color: #b23a3a; border-bottom: 2px solid #b23a3a; margin-top: 0; }
+.ltx-group { background: white; padding: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.active-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+label { display: block; font-size: 11px; font-weight: bold; margin-top: 10px; color: #555; }
+select, input[type="number"] { width: 100%; padding: 6px; margin-top: 4px; border: 1px solid #ccc; border-radius: 3px; }
+#map-btn { width: 100%; padding: 15px; background: #b23a3a; color: white; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; border-radius: 4px; }
+#map-btn:hover { background: #962a2a; }
+#download-btn { width: 100%; padding: 10px; background: #555; color: white; border: none; cursor: pointer; margin-top: 10px; border-radius: 4px; }
