@@ -1,4 +1,3 @@
-const MAROON = '#b23a3a';
 const CYAN = '#00adef';
 const canvas = new fabric.Canvas('networkCanvas');
 
@@ -14,43 +13,44 @@ function drawJunction(x, y) {
 }
 
 function createLTX(id, x, y, label, linkType, callback) {
-    // Attempt to load the PNG
-    fabric.Image.fromURL('ltx-100-base2.png', function(img, isError) {
-        let ltxBody;
-
+    // Loading ltxbase3.png
+    fabric.Image.fromURL('ltxbase3.png', function(img, isError) {
         if (isError) {
-            // Fallback to maroon box if image is missing
-            ltxBody = new fabric.Rect({ width: 200, height: 100, fill: MAROON, originX: 'center' });
+            console.error("Could not load ltxbase3.png");
+            // Fallback placeholder
+            const rect = new fabric.Rect({ width: 200, height: 100, fill: '#b23a3a', originX: 'center' });
+            finishLTX(rect, true);
         } else {
             img.scaleToWidth(200);
             img.set({ originX: 'center', top: 0 });
-            ltxBody = img;
+            finishLTX(img, false);
         }
 
-        const text = new fabric.Text(label, { 
-            fontSize: 22, fontWeight: 'bold', top: 40, originX: 'center', fill: isError ? 'white' : 'black' 
-        });
+        function finishLTX(body, isFallback) {
+            const text = new fabric.Text(label, { 
+                fontSize: 22, fontWeight: 'bold', top: 40, originX: 'center', fill: isFallback ? 'white' : 'black' 
+            });
 
-        const antennas = [new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: 60, originX: 'center' })];
-        if (id === 'Home' && linkType === 'Cellular') {
-            antennas.push(new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: -60, originX: 'center' }));
+            const antennas = [new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: 60, originX: 'center' })];
+            if (id === 'Home' && linkType === 'Cellular') {
+                antennas.push(new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: -60, originX: 'center' }));
+            }
+
+            const group = new fabric.Group([body, text, ...antennas], { left: x, top: y });
+            canvas.add(group);
+            if (callback) callback(group);
+            canvas.renderAll();
         }
-
-        const group = new fabric.Group([ltxBody, text, ...antennas], { left: x, top: y });
-        canvas.add(group);
-        if (callback) callback(group);
-        canvas.renderAll();
-    }, { crossOrigin: 'anonymous' });
+    });
 }
 
-async function render() {
+function render() {
     canvas.clear();
     const ltxIds = ['Home', '2'];
     let positions = {};
 
     ltxIds.forEach((id, index) => {
-        const active = document.getElementById(`active-${id}`)?.checked;
-        if (!active) return;
+        if (!document.getElementById(`active-${id}`)?.checked) return;
 
         const count = parseInt(document.getElementById(`count-${id}`).value || 0);
         const link = document.getElementById(`link-${id}`).value;
@@ -60,7 +60,6 @@ async function render() {
         createLTX(id, x, y, id === 'Home' ? 'LTX Home' : 'LTX 2', link, (group) => {
             positions[id] = { x: x + 100, y: y };
 
-            // Draw LoRa Link
             if (id === '2' && link === 'LoRa to Home' && positions['Home']) {
                 const x1 = positions['2'].x;
                 const x2 = positions['Home'].x;
@@ -70,7 +69,6 @@ async function render() {
                 canvas.add(new fabric.Text('LoRa', { fontSize: 24, fill: CYAN, fontWeight: 'bold', left: midX - 30, top: 25 }));
             }
 
-            // Draw Grid
             if (count > 0) {
                 const busY = 320;
                 canvas.add(new fabric.Line([x + 100, 220, x + 100, busY], { stroke: 'black', strokeWidth: 4 }));
@@ -107,8 +105,9 @@ async function render() {
 document.getElementById('map-btn').addEventListener('click', render);
 document.getElementById('download-btn').addEventListener('click', () => {
     const link = document.createElement('a');
-    link.download = 'map.png';
+    link.download = 'network_map.png';
     link.href = canvas.toDataURL({ format: 'png' });
     link.click();
 });
+
 render();
