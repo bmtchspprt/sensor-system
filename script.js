@@ -1,119 +1,97 @@
 const MAROON = '#b23a3a';
 const CYAN = '#00adef';
-
-// Initialize the canvas once the script loads
 const canvas = new fabric.Canvas('networkCanvas');
 
-// Set dimensions to fill the remaining screen space
-function resizeCanvas() {
-    canvas.setWidth(window.innerWidth - 300);
+function resize() {
+    canvas.setWidth(window.innerWidth - 320);
     canvas.setHeight(window.innerHeight);
+    render();
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', resize);
+resize();
 
 function drawJunction(x, y) {
-    const circle = new fabric.Circle({ 
-        radius: 8, fill: 'black', left: x, top: y, 
-        originX: 'center', originY: 'center', selectable: false 
-    });
-    canvas.add(circle);
+    canvas.add(new fabric.Circle({ radius: 8, fill: 'black', left: x, top: y, originX: 'center', originY: 'center', selectable: false }));
 }
 
-function createLTX(x, y, label, linkType) {
-    const rect = new fabric.Rect({ width: 200, height: 100, fill: MAROON, originX: 'center' });
-    const text = new fabric.Text(label, { fontSize: 24, fontWeight: 'bold', top: 35, originX: 'center', fill: 'black' });
-    
-    const antennas = [];
-    // Right antenna
-    antennas.push(new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: 50, originX: 'center' }));
-    
-    // Double antenna ONLY for Home + Cellular
-    if (label === 'LTX Home' && linkType === 'Cellular') {
-        antennas.push(new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: 80, originX: 'center' }));
-    }
-
-    const group = new fabric.Group([rect, text, ...antennas], { left: x, top: y, selectable: true });
-    canvas.add(group);
-    return group;
-}
-
-function drawArchedLink(x1, x2, y, labelText) {
-    const midX = (x1 + x2) / 2;
-    const curveTop = y - 70;
-    const path = new fabric.Path(`M ${x1} ${y} Q ${midX} ${curveTop} ${x2} ${y}`, {
-        fill: '', stroke: CYAN, strokeWidth: 5, strokeDashArray: [10, 5], selectable: false
-    });
-    const label = new fabric.Text(labelText, { 
-        fontSize: 22, fontWeight: 'bold', fill: CYAN, left: midX - 25, top: curveTop - 25 
-    });
-    canvas.add(path, label);
-}
-
-function generateMap() {
+function render() {
     canvas.clear();
     const ltxIds = ['Home', '2'];
-    let ltxObjs = {};
+    let positions = {};
 
-    ltxIds.forEach((id, idx) => {
-        const checkbox = document.getElementById(`active-${id}`);
-        if (!checkbox || !checkbox.checked) return;
+    ltxIds.forEach((id, index) => {
+        const isActive = document.getElementById(`active-${id}`)?.checked;
+        if (!isActive) return;
 
-        const count = parseInt(document.getElementById(`count-${id}`).value) || 0;
-        const link = document.getElementById(`link-${id}`).value;
-        const xPos = 50 + (idx * 350);
+        const count = parseInt(document.getElementById(`count-${id}`)?.value || 0);
+        const link = document.getElementById(`link-${id}`)?.value || '';
+        const x = 80 + (index * 400);
+        const y = 100;
 
+        // Draw LTX Box
         const ltxLabel = id === 'Home' ? 'LTX Home' : `LTX ${id}`;
-        const ltx = createLTX(xPos, 120, ltxLabel, link);
-        ltxObjs[id] = ltx;
-
-        // Arch Logic: Only draw if LoRa is selected
-        if (id !== 'Home' && ltxObjs['Home'] && link === 'LoRa to Home') {
-            drawArchedLink(ltx.left + 100, ltxObjs['Home'].left + 100, 120, 'LoRa');
+        const rect = new fabric.Rect({ width: 220, height: 110, fill: MAROON, originX: 'center' });
+        const text = new fabric.Text(ltxLabel, { fontSize: 26, fontWeight: 'bold', top: 40, originX: 'center' });
+        
+        // Antenna Logic
+        const antennas = [new fabric.Rect({ width: 12, height: 30, fill: 'black', top: -30, left: 60, originX: 'center' })];
+        if (id === 'Home' && link === 'Cellular') {
+            antennas.push(new fabric.Rect({ width: 12, height: 30, fill: 'black', top: -30, left: -60, originX: 'center' }));
         }
 
-        const busY = 300;
-        if (count > 0) {
-            // Main Drop
-            canvas.add(new fabric.Line([xPos + 100, 220, xPos + 100, busY], { stroke: 'black', strokeWidth: 4 }));
-            drawJunction(xPos + 100, 220);
-            drawJunction(xPos + 100, busY);
+        const group = new fabric.Group([rect, text, ...antennas], { left: x, top: y });
+        canvas.add(group);
+        positions[id] = { x: x + 110, y: y };
 
-            // Horizontal Bus
-            canvas.add(new fabric.Line([xPos + 15, busY, xPos + 185, busY], { stroke: 'black', strokeWidth: 4 }));
-            drawJunction(xPos + 15, busY);
-            drawJunction(xPos + 185, busY);
+        // Draw LoRa Link
+        if (id === '2' && link === 'LoRa to Home' && positions['Home']) {
+            const x1 = positions['2'].x;
+            const x2 = positions['Home'].x;
+            const midX = (x1 + x2) / 2;
+            const arch = new fabric.Path(`M ${x1} 100 Q ${midX} 20 ${x2} 100`, { fill: '', stroke: CYAN, strokeWidth: 5, strokeDashArray: [10, 5] });
+            canvas.add(arch);
+            canvas.add(new fabric.Text('LoRa', { fontSize: 24, fill: CYAN, fontWeight: 'bold', left: midX - 30, top: 20 }));
+        }
+
+        // Draw Sensors (2x3 Grid)
+        if (count > 0) {
+            const busY = 320;
+            canvas.add(new fabric.Line([x + 110, 210, x + 110, busY], { stroke: 'black', strokeWidth: 5 }));
+            drawJunction(x + 110, 210);
+            drawJunction(x + 110, busY);
+            canvas.add(new fabric.Line([x + 30, busY, x + 190, busY], { stroke: 'black', strokeWidth: 5 }));
 
             for (let i = 0; i < count; i++) {
-                const row = Math.floor(i / 3);
                 const col = i % 3;
-                const sX = xPos + (col * 75) - 10;
-                const sY = busY + 60 + (row * 140);
+                const row = Math.floor(i / 3);
+                const sX = x + (col * 80) - 5;
+                const sY = busY + 70 + (row * 150);
 
                 const sensor = new fabric.Group([
-                    new fabric.Rect({ width: 55, height: 90, fill: CYAN }),
-                    new fabric.Text(`NCR ${i+1}`, { fontSize: 12, angle: 90, left: 40, top: 15, fontWeight: 'bold' })
+                    new fabric.Rect({ width: 60, height: 100, fill: CYAN }),
+                    new fabric.Text(`NCR ${i+1}`, { fontSize: 14, angle: 90, left: 45, top: 20, fontWeight: 'bold' })
                 ], { left: sX, top: sY });
 
+                // Connection lines
+                const connX = sX + 30;
                 if (row === 0) {
-                    canvas.add(new fabric.Line([sX + 27, sY, sX + 27, busY], { stroke: 'black', strokeWidth: 4 }));
-                    drawJunction(sX + 27, busY);
+                    canvas.add(new fabric.Line([connX, sY, connX, busY], { stroke: 'black', strokeWidth: 4 }));
+                    drawJunction(connX, busY);
                 } else {
-                    // Vertical daisy chain to the sensor above
-                    const aboveBottom = sY - 50; 
-                    canvas.add(new fabric.Line([sX + 27, sY, sX + 27, aboveBottom], { stroke: 'black', strokeWidth: 4 }));
-                    drawJunction(sX + 27, aboveBottom);
+                    canvas.add(new fabric.Line([connX, sY, connX, sY - 50], { stroke: 'black', strokeWidth: 4 }));
                 }
-                
-                drawJunction(sX + 27, sY);
+                drawJunction(connX, sY);
                 canvas.add(sensor);
             }
         }
     });
 }
 
-// Attach event listener to the button
-document.getElementById('map-btn').addEventListener('click', generateMap);
-
-// Trigger initial map on load
-generateMap();
+document.getElementById('map-btn').addEventListener('click', render);
+document.getElementById('download-btn').addEventListener('click', () => {
+    const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
+    const link = document.createElement('a');
+    link.download = 'network-map.png';
+    link.href = dataURL;
+    link.click();
+});
