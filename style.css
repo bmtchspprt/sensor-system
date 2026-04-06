@@ -5,6 +5,6 @@ h2 { color: #8b0000; margin-top: 0; border-bottom: 2px solid #8b0000; padding-bo
 .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 label { display: block; font-size: 12px; font-weight: 600; margin-top: 10px; color: #555; }
 input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-#map-btn { width: 100%; padding: 12px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-bottom: 5px;}
+#map-btn { width: 100%; padding: 12px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-bottom: 10px; }
 #download-btn { width: 100%; padding: 8px; background: #6c757d; color: white; border: none; cursor: pointer; border-radius: 4px; }
 #networkCanvas { flex-grow: 1; }
