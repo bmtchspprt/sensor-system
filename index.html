@@ -12,19 +12,36 @@
         <button id="map-btn">MAP</button>
         <button id="download-btn">Download PNG</button>
         <hr>
+        
         <div class="ltx-group">
-            <div class="header-row"><strong>LTX Home</strong><input type="checkbox" id="active-Home" checked></div>
-            <label>Sensors:</label><input type="number" id="count-Home" value="4">
+            <div class="header-row">
+                <strong>LTX Home</strong>
+                <input type="checkbox" id="active-Home" checked>
+            </div>
+            <label>Sensors:</label>
+            <input type="number" id="count-Home" value="0" min="0">
             <label>Link Type:</label>
-            <select id="link-Home"><option value="Cellular">Cellular</option><option value="Ethernet">Ethernet</option></select>
+            <select id="link-Home">
+                <option value="Cellular">Cellular</option>
+                <option value="Ethernet">Ethernet</option>
+            </select>
         </div>
+
         <div class="ltx-group">
-            <div class="header-row"><strong>LTX 2</strong><input type="checkbox" id="active-2" checked></div>
-            <label>Sensors:</label><input type="number" id="count-2" value="6">
+            <div class="header-row">
+                <strong>LTX 2</strong>
+                <input type="checkbox" id="active-2" checked>
+            </div>
+            <label>Sensors:</label>
+            <input type="number" id="count-2" value="6" min="0">
             <label>Link Type:</label>
-            <select id="link-2"><option value="LoRa to Home">LoRa to Home</option><option value="Wired">Wired</option></select>
+            <select id="link-2">
+                <option value="LoRa to Home">LoRa to Home</option>
+                <option value="Wired">Wired</option>
+            </select>
         </div>
     </div>
+
     <canvas id="networkCanvas"></canvas>
     <script src="script.js"></script>
 </body>
