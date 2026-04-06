@@ -1,9 +1,82 @@
-body { display: flex; margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; background-color: #fff; }
-#side-menu { width: 300px; background: #f8f9fa; padding: 20px; border-right: 1px solid #dee2e6; overflow-y: auto; }
-h2 { color: #8b0000; margin-top: 0; border-bottom: 2px solid #8b0000; padding-bottom: 10px; }
-.ltx-group { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-label { display: block; font-size: 12px; font-weight: 600; margin-top: 10px; color: #555; }
-input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-#map-btn { width: 100%; padding: 12px; background: #b23a3a; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-#networkCanvas { flex-grow: 1; }
+body { 
+    display: flex; 
+    margin: 0; 
+    font-family: 'Segoe UI', sans-serif; 
+    height: 100vh; 
+    background-color: #ffffff; 
+}
+
+#side-menu { 
+    width: 320px; 
+    background: #f8f9fa; 
+    padding: 20px; 
+    border-right: 1px solid #dee2e6; 
+    overflow-y: auto; 
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05); 
+}
+
+h2 { 
+    color: #8b0000; 
+    margin-top: 0; 
+    border-bottom: 2px solid #8b0000; 
+    padding-bottom: 10px; 
+}
+
+.ltx-group { 
+    background: white; 
+    padding: 15px; 
+    margin-bottom: 20px; 
+    border-radius: 8px; 
+    border: 1px solid #e0e0e0; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+}
+
+.header-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 10px; 
+}
+
+label { 
+    display: block; 
+    font-size: 13px; 
+    font-weight: 600; 
+    margin-top: 12px; 
+    color: #444; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 8px; 
+    margin-top: 5px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+}
+
+#map-btn { 
+    width: 100%; 
+    padding: 12px; 
+    background: #b23a3a; 
+    color: white; 
+    border: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    margin-bottom: 10px; 
+}
+
+#download-btn { 
+    width: 100%; 
+    padding: 8px; 
+    background: #6c757d; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 4px; 
+}
+
+#networkCanvas { 
+    flex-grow: 1; 
+}
