@@ -2,102 +2,95 @@ const CYAN = '#00adef';
 const canvas = new fabric.Canvas('networkCanvas');
 
 function initSize() {
-    canvas.setWidth(window.innerWidth - 320);
+    canvas.setWidth(window.innerWidth - 300);
     canvas.setHeight(window.innerHeight);
 }
 window.addEventListener('resize', initSize);
 initSize();
 
-function createLTX(id, x, y, label, callback) {
-    fabric.Image.fromURL('ltxbase3.png', function(img) {
-        img.scaleToWidth(400); // Double size
-        img.set({ left: x, top: y, selectable: true });
-        
-        // Name placed BELOW the device
-        const text = new fabric.Text(label, { 
-            fontSize: 32, fontWeight: 'bold', left: x + 200, top: y + 210, originX: 'center' 
-        });
-
-        canvas.add(img);
-        canvas.add(text);
-        
-        if (callback) callback({ x: x, y: y });
-        canvas.renderAll();
-    });
-}
-
 function render() {
     canvas.clear();
     const ltxIds = ['Home', '2'];
-    let positions = {};
+    let ltxData = {};
 
     ltxIds.forEach((id, index) => {
-        const activeBox = document.getElementById(`active-${id}`);
-        if (!activeBox || !activeBox.checked) return;
+        if (!document.getElementById(`active-${id}`).checked) return;
 
         const count = parseInt(document.getElementById(`count-${id}`).value || 0);
         const link = document.getElementById(`link-${id}`).value;
-        const x = 50 + (index * 550);
-        const y = 120;
+        const xBase = 100 + (index * 550);
+        const yBase = 120;
 
-        createLTX(id, x, y, id === 'Home' ? 'LTX Home' : 'LTX 2', (pos) => {
-            positions[id] = pos;
+        fabric.Image.fromURL('ltxbase3.png', (img) => {
+            img.scaleToWidth(400);
+            img.set({ left: xBase, top: yBase, selectable: true });
+            canvas.add(img);
 
-            // LoRa Arc connecting Left Antennas
-            if (id === '2' && link === 'LoRa to Home' && positions['Home']) {
-                const xStart = positions['2'].x + 130; // Approx left antenna position
-                const xEnd = positions['Home'].x + 130; 
+            // Name CLEARLY UNDER the image
+            const name = new fabric.Text(id === 'Home' ? 'LTX Home' : 'LTX 2', {
+                left: xBase + 200, top: yBase + 220, fontSize: 32, fontWeight: 'bold', originX: 'center'
+            });
+            canvas.add(name);
+
+            ltxData[id] = { x: xBase, y: yBase };
+
+            // 1. LoRa Arc (Left side to left side)
+            if (id === '2' && link === 'LoRa to Home' && ltxData['Home']) {
+                const xStart = xBase + 130;
+                const xEnd = ltxData['Home'].x + 130;
                 const midX = (xStart + xEnd) / 2;
-                const path = new fabric.Path(`M ${xStart} 120 Q ${midX} 20 ${xEnd} 120`, { 
-                    fill: '', stroke: CYAN, strokeWidth: 6, strokeDashArray: [10, 5] 
-                });
-                canvas.add(path);
-                canvas.add(new fabric.Text('LoRa', { fontSize: 24, fill: CYAN, left: midX - 30, top: 40, fontWeight: 'bold' }));
+                canvas.add(new fabric.Path(`M ${xStart} ${yBase + 10} Q ${midX} ${yBase - 120} ${xEnd} ${yBase + 10}`, {
+                    fill: '', stroke: CYAN, strokeWidth: 5, strokeDashArray: [10, 5]
+                }));
             }
 
-            // Daisy Chain Sensors
+            // 2. Orthogonal Daisy Chain Wiring
             if (count > 0) {
-                // Initial wire from the center bottom of LTX
-                let prevX = x + 200;
-                let prevY = y + 200;
+                // Vertical trunk line starting from the bottom of LTX
+                const trunkX = xBase + 200;
+                canvas.add(new fabric.Line([trunkX, yBase + 200, trunkX, yBase + 350], { stroke: 'black', strokeWidth: 6 }));
+
+                let prevPoint = { x: trunkX, y: yBase + 350 };
 
                 for (let i = 0; i < count; i++) {
                     const row = Math.floor(i / 3);
-                    const col = (row % 2 === 0) ? (i % 3) : (2 - (i % 3)); // Snake pattern
-                    
-                    const sX = x + 50 + (col * 140);
-                    const sY = y + 400 + (row * 160);
+                    const colInRow = i % 3;
+                    const col = (row % 2 === 0) ? colInRow : (2 - colInRow); 
 
-                    // Small Sensor
-                    const sensorRect = new fabric.Rect({ width: 50, height: 80, fill: CYAN });
-                    const sensorLabel = new fabric.Text(`NCR ${i+1}`, { 
-                        fontSize: 14, fontWeight: 'bold', top: 20, left: 55, angle: 90 
+                    const sX = xBase + 50 + (col * 150);
+                    const sY = yBase + 350 + (row * 180);
+
+                    // Half-size Sensor
+                    const rect = new fabric.Rect({ width: 50, height: 90, fill: CYAN });
+                    const lab = new fabric.Text(`NCR ${i+1}`, { 
+                        fontSize: 16, fontWeight: 'bold', angle: 90, left: 38, top: 20 
                     });
-                    
-                    const sensorGroup = new fabric.Group([sensorRect, sensorLabel], { left: sX, top: sY });
-                    
-                    // Connection Line
-                    canvas.add(new fabric.Line([prevX, prevY, sX + 25, sY], { 
-                        stroke: 'black', strokeWidth: 8 
-                    }));
+                    const sensorGroup = new fabric.Group([rect, lab], { left: sX, top: sY });
+
+                    // Straight wiring logic
+                    const sensorAttachX = sX + 25;
+                    const sensorAttachY = sY + 45;
+
+                    // Horizontal segment
+                    canvas.add(new fabric.Line([prevPoint.x, prevPoint.y, sensorAttachX, prevPoint.y], { stroke: 'black', strokeWidth: 6 }));
+                    // Vertical segment
+                    canvas.add(new fabric.Line([sensorAttachX, prevPoint.y, sensorAttachX, sensorAttachY], { stroke: 'black', strokeWidth: 6 }));
 
                     canvas.add(sensorGroup);
-                    
-                    // Update connection point to current sensor
-                    prevX = sX + 25;
-                    prevY = sY + 80;
+
+                    prevPoint = { x: sensorAttachX, y: sensorAttachY };
                 }
             }
+            canvas.renderAll();
         });
     });
 }
 
 document.getElementById('map-btn').addEventListener('click', render);
 document.getElementById('download-btn').addEventListener('click', () => {
-    const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
     const link = document.createElement('a');
     link.download = 'network_map.png';
-    link.href = dataURL;
+    link.href = canvas.toDataURL({ format: 'png' });
     link.click();
 });
 
