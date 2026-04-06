@@ -8,35 +8,23 @@ function initSize() {
 window.addEventListener('resize', initSize);
 initSize();
 
-function drawJunction(x, y) {
-    canvas.add(new fabric.Circle({ radius: 8, fill: 'black', left: x, top: y, originX: 'center', originY: 'center', selectable: false }));
-}
-
-function createLTX(id, x, y, label, linkType, callback) {
-    // Loading ltxbase3.png
+function createLTX(id, x, y, label, callback) {
     fabric.Image.fromURL('ltxbase3.png', function(img, isError) {
         if (isError) {
-            console.error("Could not load ltxbase3.png");
-            // Fallback placeholder
-            const rect = new fabric.Rect({ width: 200, height: 100, fill: '#b23a3a', originX: 'center' });
-            finishLTX(rect, true);
+            // Fallback if image is missing
+            const rect = new fabric.Rect({ width: 400, height: 200, fill: '#b23a3a', originX: 'center' });
+            assemble(rect);
         } else {
-            img.scaleToWidth(200);
+            img.scaleToWidth(400); // Double size
             img.set({ originX: 'center', top: 0 });
-            finishLTX(img, false);
+            assemble(img);
         }
 
-        function finishLTX(body, isFallback) {
+        function assemble(ltxBody) {
             const text = new fabric.Text(label, { 
-                fontSize: 22, fontWeight: 'bold', top: 40, originX: 'center', fill: isFallback ? 'white' : 'black' 
+                fontSize: 40, fontWeight: 'bold', top: 80, originX: 'center', fill: 'black' 
             });
-
-            const antennas = [new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: 60, originX: 'center' })];
-            if (id === 'Home' && linkType === 'Cellular') {
-                antennas.push(new fabric.Rect({ width: 12, height: 28, fill: 'black', top: -28, left: -60, originX: 'center' }));
-            }
-
-            const group = new fabric.Group([body, text, ...antennas], { left: x, top: y });
+            const group = new fabric.Group([ltxBody, text], { left: x, top: y, selectable: true });
             canvas.add(group);
             if (callback) callback(group);
             canvas.renderAll();
@@ -54,48 +42,46 @@ function render() {
 
         const count = parseInt(document.getElementById(`count-${id}`).value || 0);
         const link = document.getElementById(`link-${id}`).value;
-        const x = 100 + (index * 420);
-        const y = 120;
+        const x = 50 + (index * 550); 
+        const y = 100;
 
-        createLTX(id, x, y, id === 'Home' ? 'LTX Home' : 'LTX 2', link, (group) => {
-            positions[id] = { x: x + 100, y: y };
+        createLTX(id, x, y, id === 'Home' ? 'LTX Home' : 'LTX 2', (group) => {
+            positions[id] = { x: x + 200, y: y + 200 }; // Center bottom of LTX
 
+            // LoRa Arc
             if (id === '2' && link === 'LoRa to Home' && positions['Home']) {
                 const x1 = positions['2'].x;
                 const x2 = positions['Home'].x;
                 const midX = (x1 + x2) / 2;
-                const path = new fabric.Path(`M ${x1} 120 Q ${midX} 30 ${x2} 120`, { fill: '', stroke: CYAN, strokeWidth: 5, strokeDashArray: [10, 5] });
+                const path = new fabric.Path(`M ${x1} 100 Q ${midX} 0 ${x2} 100`, { 
+                    fill: '', stroke: CYAN, strokeWidth: 5, strokeDashArray: [10, 5] 
+                });
                 canvas.add(path);
-                canvas.add(new fabric.Text('LoRa', { fontSize: 24, fill: CYAN, fontWeight: 'bold', left: midX - 30, top: 25 }));
             }
 
+            // Daisy Chain Sensors
             if (count > 0) {
-                const busY = 320;
-                canvas.add(new fabric.Line([x + 100, 220, x + 100, busY], { stroke: 'black', strokeWidth: 4 }));
-                drawJunction(x + 100, 220);
-                drawJunction(x + 100, busY);
-                canvas.add(new fabric.Line([x + 25, busY, x + 175, busY], { stroke: 'black', strokeWidth: 4 }));
+                let prevX = x + 200;
+                let prevY = y + 200;
 
                 for (let i = 0; i < count; i++) {
-                    const col = i % 3;
-                    const row = Math.floor(i / 3);
-                    const sX = x + (col * 75) - 5;
-                    const sY = busY + 70 + (row * 150);
+                    const sX = x + 50 + (i % 3 * 100);
+                    const sY = y + 350 + (Math.floor(i / 3) * 150);
 
+                    // Sensor (Half size: 27x45 approx)
                     const sensor = new fabric.Group([
-                        new fabric.Rect({ width: 55, height: 95, fill: CYAN }),
-                        new fabric.Text(`NCR ${i+1}`, { fontSize: 13, angle: 90, left: 42, top: 20, fontWeight: 'bold' })
+                        new fabric.Rect({ width: 27, height: 45, fill: CYAN }),
+                        new fabric.Text(`NCR ${i+1}`, { fontSize: 8, angle: 90, left: 20, top: 10, fontWeight: 'bold' })
                     ], { left: sX, top: sY });
 
-                    const cx = sX + 27;
-                    if (row === 0) {
-                        canvas.add(new fabric.Line([cx, sY, cx, busY], { stroke: 'black', strokeWidth: 4 }));
-                        drawJunction(cx, busY);
-                    } else {
-                        canvas.add(new fabric.Line([cx, sY, cx, sY - 55], { stroke: 'black', strokeWidth: 4 }));
-                    }
-                    drawJunction(cx, sY);
+                    // Connect current sensor to previous point (LTX or previous sensor)
+                    canvas.add(new fabric.Line([prevX, prevY, sX + 13, sY], { 
+                        stroke: 'black', strokeWidth: 3 
+                    }));
+
                     canvas.add(sensor);
+                    prevX = sX + 13;
+                    prevY = sY + 45;
                 }
             }
         });
