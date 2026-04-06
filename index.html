@@ -10,6 +10,7 @@
     <div id="side-menu">
         <h2>Network Config</h2>
         <button id="map-btn">MAP</button>
+        <button id="download-btn">Download PNG</button>
         <hr>
         
         <div class="ltx-group">
@@ -17,8 +18,16 @@
                 <strong>LTX Home</strong>
                 <input type="checkbox" id="active-Home" checked>
             </div>
-            <label>Sensors:</label>
+            <label>Number of Sensors:</label>
             <input type="number" id="count-Home" value="0" min="0">
+            <label>Sensor Type:</label>
+            <select id="type-Home">
+                <option value="NCR">NCR</option>
+            </select>
+            <label>Protocol:</label>
+            <select id="proto-Home">
+                <option value="Modbus">Modbus</option>
+            </select>
             <label>Link Type:</label>
             <select id="link-Home">
                 <option value="Cellular">Cellular</option>
@@ -31,8 +40,16 @@
                 <strong>LTX 2</strong>
                 <input type="checkbox" id="active-2" checked>
             </div>
-            <label>Sensors:</label>
+            <label>Number of Sensors:</label>
             <input type="number" id="count-2" value="6" min="0">
+            <label>Sensor Type:</label>
+            <select id="type-2">
+                <option value="NCR">NCR</option>
+            </select>
+            <label>Protocol:</label>
+            <select id="proto-2">
+                <option value="Modbus">Modbus</option>
+            </select>
             <label>Link Type:</label>
             <select id="link-2">
                 <option value="LoRa to Home">LoRa to Home</option>
