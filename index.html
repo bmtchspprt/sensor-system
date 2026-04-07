@@ -1,48 +1,411 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>LTX Network Mapper</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LTX Sensor Network Mapper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+  :root {
+    --bg: #1a1a1f; --surface: #22222a; --surface2: #2a2a35;
+    --border: #3a3a48; --border2: #4a4a5a;
+    --text: #e8e8f0; --text2: #9090a8; --text3: #5a5a72;
+    --accent: #8B1E2E; --accent2: #b22838;
+    --ltx-stroke: #c03040;
+    --c-modbus: #3B82F6; --c-hart: #F97316; --c-ma420: #22C55E;
+    --c-smartbob: #EAB308; --c-herdstar: #A855F7;
+    --c-lora: #38BDF8; --c-wired: #4ADE80;
+    --font: 'IBM Plex Sans', sans-serif; --mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+  #sidebar { width: 270px; min-width: 270px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .sb-head { padding: 16px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .sb-logo { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; font-family: var(--mono); }
+  .sb-title { font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+  .sb-sub { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+  .sb-scroll { flex: 1; overflow-y: auto; }
+  .sb-scroll::-webkit-scrollbar { width: 4px; }
+  .sb-scroll::-webkit-scrollbar-track { background: transparent; }
+  .sb-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .ltx-card { border-bottom: 1px solid var(--border); padding: 12px 16px; transition: background .15s; }
+  .ltx-card.disabled { opacity: .45; }
+  .ltx-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ltx-badge { width: 8px; height: 8px; border-radius: 2px; background: var(--ltx-stroke); flex-shrink: 0; }
+  .ltx-label { font-size: 11px; font-weight: 600; font-family: var(--mono); color: #e04050; letter-spacing: .5px; flex: 1; }
+  .ltx-toggle { width: 32px; height: 17px; border-radius: 9px; background: var(--border2); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+  .ltx-toggle.on { background: var(--accent2); }
+  .ltx-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .ltx-toggle.on::after { left: 17px; }
+  .field { margin-bottom: 8px; }
+  .field-label { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .row { display: flex; gap: 6px; align-items: center; }
+  input[type=number], select { font-family: var(--mono); font-size: 11px; background: var(--surface2); color: var(--text); border: 1px solid var(--border2); border-radius: 5px; padding: 5px 8px; outline: none; transition: border-color .15s; }
+  input[type=number]:focus, select:focus { border-color: var(--accent2); }
+  input[type=number] { width: 58px; }
+  select { flex: 1; }
+  .toggle-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tg-btn { font-size: 10px; font-family: var(--mono); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .tg-btn.active { border-color: transparent; color: #fff; }
+  .tg-btn[data-p="Modbus"].active { background: var(--c-modbus); }
+  .tg-btn[data-p="HART"].active { background: var(--c-hart); }
+  .tg-btn[data-p="4-20mA"].active { background: var(--c-ma420); }
+  .tg-btn[data-p="SmartBob"].active { background: var(--c-smartbob); color: #111; }
+  .tg-btn[data-p="HerdStar"].active { background: var(--c-herdstar); }
+  .tg-btn[data-c="Ethernet"].active, .tg-btn[data-c="Cellular"].active { background: var(--accent2); }
+  .tg-btn[data-c="LoRa"].active { background: var(--c-lora); color: #042C53; }
+  .tg-btn[data-c="Wired"].active { background: var(--c-wired); color: #0a2a10; }
+  #map-btn { margin: 14px 16px; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-family: var(--mono); font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: .5px; transition: background .15s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #map-btn:hover { background: var(--accent2); }
+  #map-btn:active { transform: scale(.98); }
+  .legend { padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .leg-title { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .leg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+  .leg-swatch { width: 22px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+  .leg-swatch.dashed { background: transparent; border-top: 2px dashed currentColor; height: 0; margin-top: 1px; }
+  .leg-text { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+  #canvas-toolbar { position: absolute; top: 12px; right: 12px; z-index: 20; display: flex; gap: 6px; }
+  .tb-btn { font-size: 11px; font-family: var(--mono); padding: 5px 12px; border-radius: 5px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; transition: all .15s; }
+  .tb-btn:hover { border-color: var(--text2); color: var(--text); }
+  .tb-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tb-btn.primary:hover { background: var(--accent2); }
+  #canvas-hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text3); font-family: var(--mono); pointer-events: none; white-space: nowrap; }
+  #svg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .ltx-group { cursor: grab; user-select: none; }
+  .ltx-group:active { cursor: grabbing; }
+  .sensor-rect { cursor: pointer; transition: filter .1s; }
+  .sensor-rect:hover { filter: brightness(1.3); }
+  #rename-popup { position: absolute; display: none; z-index: 100; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  #rename-popup label { font-size: 10px; color: var(--text3); font-family: var(--mono); display: block; margin-bottom: 5px; }
+  #rename-input { font-family: var(--mono); font-size: 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border2); border-radius: 4px; padding: 5px 8px; width: 160px; outline: none; }
+  #rename-input:focus { border-color: var(--accent2); }
+  #rename-ok { margin-top: 7px; width: 100%; padding: 5px; background: var(--accent); color: #fff; border: none; border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+  #empty-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+  #empty-msg .big { font-size: 48px; opacity: .1; }
+  #empty-msg .txt { font-size: 12px; color: var(--text3); font-family: var(--mono); margin-top: 8px; }
+</style>
 </head>
 <body>
-    <div id="side-menu">
-        <h2 class="menu-title">Network Config</h2>
-        <button id="map-btn">MAP</button>
-        <button id="download-btn">Download PNG</button>
-        <hr>
-        
-        <div class="config-card">
-            <div class="card-header">
-                <strong>LTX Home</strong>
-                <input type="checkbox" id="active-Home" checked>
-            </div>
-            <label>Sensors:</label>
-            <input type="number" id="count-Home" value="0">
-            <label>Link Type:</label>
-            <select id="link-Home">
-                <option value="Cellular">Cellular</option>
-                <option value="Ethernet">Ethernet</option>
-            </select>
-        </div>
 
-        <div class="config-card">
-            <div class="card-header">
-                <strong>LTX 2</strong>
-                <input type="checkbox" id="active-2" checked>
-            </div>
-            <label>Sensors:</label>
-            <input type="number" id="count-2" value="6">
-            <label>Link Type:</label>
-            <select id="link-2">
-                <option value="LoRa to Home">LoRa to Home</option>
-                <option value="Wired">Wired</option>
-            </select>
-        </div>
+<div id="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo">LTX</div>
+    <div><div class="sb-title">Network Mapper</div><div class="sb-sub">sensor topology designer</div></div>
+  </div>
+  <div class="sb-scroll" id="ltx-configs">
+    <div class="ltx-card" id="card-0" data-index="0">
+      <div class="ltx-header"><div class="ltx-badge"></div><div class="ltx-label">LTX HOME</div></div>
+      <div class="field"><div class="field-label">Sensors</div><div class="row"><input type="number" min="1" max="24" value="6" class="sens-count"><select class="sens-type"><option>NCR</option><option>CNCR</option><option>SmartBob</option><option>HerdStar</option></select></div></div>
+      <div class="field"><div class="field-label">Protocol</div><div class="toggle-group proto-group"><div class="tg-btn active" data-p="Modbus">MB</div><div class="tg-btn" data-p="HART">HT</div><div class="tg-btn" data-p="4-20mA">4-20</div><div class="tg-btn" data-p="SmartBob">SB</div><div class="tg-btn" data-p="HerdStar">HS</div></div></div>
+      <div class="field"><div class="field-label">Internet Uplink</div><div class="toggle-group conn-group"><div class="tg-btn active" data-c="Ethernet">Ethernet</div><div class="tg-btn" data-c="Cellular">Cellular</div></div></div>
     </div>
+    <div class="ltx-card" id="card-1" data-index="1">
+      <div class="ltx-header"><div class="ltx-badge"></div><div class="ltx-label">LTX 2</div><div class="ltx-toggle on" data-idx="1"></div></div>
+      <div class="ltx-fields">
+        <div class="field"><div class="field-label">Sensors</div><div class="row"><input type="number" min="1" max="24" value="6" class="sens-count"><select class="sens-type"><option>NCR</option><option>CNCR</option><option>SmartBob</option><option>HerdStar</option></select></div></div>
+        <div class="field"><div class="field-label">Protocol</div><div class="toggle-group proto-group"><div class="tg-btn" data-p="Modbus">MB</div><div class="tg-btn active" data-p="HART">HT</div><div class="tg-btn" data-p="4-20mA">4-20</div><div class="tg-btn" data-p="SmartBob">SB</div><div class="tg-btn" data-p="HerdStar">HS</div></div></div>
+        <div class="field"><div class="field-label">Backhaul to Home</div><div class="toggle-group conn-group"><div class="tg-btn active" data-c="LoRa">LoRa</div><div class="tg-btn" data-c="Wired">Wired</div></div></div>
+      </div>
+    </div>
+    <div class="ltx-card disabled" id="card-2" data-index="2">
+      <div class="ltx-header"><div class="ltx-badge" style="background:var(--border2)"></div><div class="ltx-label" style="color:var(--text3)">LTX 3</div><div class="ltx-toggle" data-idx="2"></div></div>
+      <div class="ltx-fields" style="display:none">
+        <div class="field"><div class="field-label">Sensors</div><div class="row"><input type="number" min="1" max="24" value="4" class="sens-count"><select class="sens-type"><option>NCR</option><option selected>CNCR</option><option>SmartBob</option><option>HerdStar</option></select></div></div>
+        <div class="field"><div class="field-label">Protocol</div><div class="toggle-group proto-group"><div class="tg-btn active" data-p="Modbus">MB</div><div class="tg-btn" data-p="HART">HT</div><div class="tg-btn" data-p="4-20mA">4-20</div><div class="tg-btn" data-p="SmartBob">SB</div><div class="tg-btn" data-p="HerdStar">HS</div></div></div>
+        <div class="field"><div class="field-label">Backhaul to Home</div><div class="toggle-group conn-group"><div class="tg-btn active" data-c="LoRa">LoRa</div><div class="tg-btn" data-c="Wired">Wired</div></div></div>
+      </div>
+    </div>
+    <div class="ltx-card disabled" id="card-3" data-index="3">
+      <div class="ltx-header"><div class="ltx-badge" style="background:var(--border2)"></div><div class="ltx-label" style="color:var(--text3)">LTX 4</div><div class="ltx-toggle" data-idx="3"></div></div>
+      <div class="ltx-fields" style="display:none">
+        <div class="field"><div class="field-label">Sensors</div><div class="row"><input type="number" min="1" max="24" value="4" class="sens-count"><select class="sens-type"><option>NCR</option><option>CNCR</option><option>SmartBob</option><option>HerdStar</option></select></div></div>
+        <div class="field"><div class="field-label">Protocol</div><div class="toggle-group proto-group"><div class="tg-btn active" data-p="Modbus">MB</div><div class="tg-btn" data-p="HART">HT</div><div class="tg-btn" data-p="4-20mA">4-20</div><div class="tg-btn" data-p="SmartBob">SB</div><div class="tg-btn" data-p="HerdStar">HS</div></div></div>
+        <div class="field"><div class="field-label">Backhaul to Home</div><div class="toggle-group conn-group"><div class="tg-btn active" data-c="LoRa">LoRa</div><div class="tg-btn" data-c="Wired">Wired</div></div></div>
+      </div>
+    </div>
+  </div>
+  <button id="map-btn"><span class="icon">▶</span> GENERATE MAP</button>
+  <div class="legend">
+    <div class="leg-title">Protocol Legend</div>
+    <div class="leg-grid">
+      <div class="leg-item"><div class="leg-swatch" style="background:var(--c-modbus)"></div><span class="leg-text">Modbus</span></div>
+      <div class="leg-item"><div class="leg-swatch" style="background:var(--c-hart)"></div><span class="leg-text">HART</span></div>
+      <div class="leg-item"><div class="leg-swatch" style="background:var(--c-ma420)"></div><span class="leg-text">4-20 mA</span></div>
+      <div class="leg-item"><div class="leg-swatch" style="background:var(--c-smartbob)"></div><span class="leg-text">SmartBob</span></div>
+      <div class="leg-item"><div class="leg-swatch" style="background:var(--c-herdstar)"></div><span class="leg-text">HerdStar</span></div>
+      <div class="leg-item"><div class="leg-swatch dashed" style="color:var(--c-lora)"></div><span class="leg-text">LoRa</span></div>
+      <div class="leg-item"><div class="leg-swatch dashed" style="color:var(--c-wired)"></div><span class="leg-text">Wired bkhl</span></div>
+    </div>
+  </div>
+</div>
 
-    <canvas id="networkCanvas"></canvas>
-    <script src="script.js"></script>
+<div id="canvas-wrap">
+  <div id="canvas-toolbar">
+    <button class="tb-btn" id="btn-reset">↺ Reset</button>
+    <button class="tb-btn" id="btn-fit">⤡ Fit</button>
+    <button class="tb-btn primary" id="btn-png">⬇ Export PNG</button>
+  </div>
+  <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg">
+    <defs><pattern id="dot-grid" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#2a2a38"/></pattern></defs>
+    <rect width="100%" height="100%" fill="url(#dot-grid)"/>
+    <g id="connections-layer"></g>
+    <g id="ltx-layer"></g>
+  </svg>
+  <div id="empty-msg">
+    <div class="big">⬡</div>
+    <div class="txt">Configure your network in the panel<br>then click GENERATE MAP</div>
+  </div>
+  <div id="canvas-hint">Drag LTX blocks to reposition • Click sensor to rename</div>
+</div>
+
+<div id="rename-popup">
+  <label>Sensor label</label>
+  <input type="text" id="rename-input" maxlength="10">
+  <button id="rename-ok">OK</button>
+</div>
+
+<script>
+document.querySelectorAll('.proto-group').forEach(g => {
+  g.querySelectorAll('.tg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      g.querySelectorAll('.tg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+document.querySelectorAll('.conn-group').forEach(g => {
+  g.querySelectorAll('.tg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      g.querySelectorAll('.tg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+document.querySelectorAll('.ltx-toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const idx = +toggle.dataset.idx;
+    const card = document.getElementById('card-' + idx);
+    const fields = card.querySelector('.ltx-fields');
+    const badge = card.querySelector('.ltx-badge');
+    const label = card.querySelector('.ltx-label');
+    const on = toggle.classList.toggle('on');
+    card.classList.toggle('disabled', !on);
+    fields.style.display = on ? '' : 'none';
+    badge.style.background = on ? 'var(--ltx-stroke)' : 'var(--border2)';
+    label.style.color = on ? '#e04050' : 'var(--text3)';
+  });
+});
+
+function getConfig() {
+  const cards = [];
+  for (let i = 0; i < 4; i++) {
+    const card = document.getElementById('card-' + i);
+    if (i > 0 && card.classList.contains('disabled')) continue;
+    const count = parseInt(card.querySelector('.sens-count').value) || 1;
+    const type = card.querySelector('.sens-type').value;
+    const proto = card.querySelector('.proto-group .tg-btn.active')?.dataset.p || 'Modbus';
+    const conn = card.querySelector('.conn-group .tg-btn.active')?.dataset.c || (i === 0 ? 'Ethernet' : 'LoRa');
+    cards.push({ index: i, label: i === 0 ? 'LTX Home' : 'LTX ' + (i + 1), count, type, proto, conn });
+  }
+  return cards;
+}
+
+const PROTO_COLORS = { 'Modbus': '#3B82F6', 'HART': '#F97316', '4-20mA': '#22C55E', 'SmartBob': '#EAB308', 'HerdStar': '#A855F7' };
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs = {}) {
+  const e = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+
+let ltxPositions = {}, sensorLabels = {}, currentConfig = [], dragging = null, dragOff = { x: 0, y: 0 };
+const LTX_W = 170, LTX_H = 80, SENS_W = 42, SENS_H = 22, SENS_GAP = 6, SENS_PER_ROW = 3, COL_ROW_GAP = 12, SENS_START_Y = LTX_H + 24;
+
+function ltxWidth() { return Math.max(LTX_W, SENS_PER_ROW * SENS_W + (SENS_PER_ROW - 1) * SENS_GAP + 16); }
+
+function defaultPositions(configs) {
+  const wrap = document.getElementById('canvas-wrap');
+  const W = wrap.clientWidth;
+  const n = configs.length;
+  const lw = ltxWidth();
+  const totalW = n * lw + (n - 1) * 60;
+  const startX = Math.max(30, (W - totalW) / 2);
+  const pos = {};
+  configs.forEach((c, i) => { pos[c.index] = { x: startX + i * (lw + 60), y: 80 }; });
+  return pos;
+}
+
+function sensorPositions(n, ltxX, ltxY) {
+  const lw = ltxWidth();
+  const padX = (lw - (SENS_PER_ROW * SENS_W + (SENS_PER_ROW - 1) * SENS_GAP)) / 2;
+  const positions = [];
+  for (let i = 0; i < n; i++) {
+    const row = Math.floor(i / SENS_PER_ROW), col = i % SENS_PER_ROW;
+    positions.push({ x: ltxX + padX + col * (SENS_W + SENS_GAP), y: ltxY + SENS_START_Y + row * (SENS_H + COL_ROW_GAP), row, col });
+  }
+  return positions;
+}
+
+function draw() {
+  const connLayer = document.getElementById('connections-layer');
+  const ltxLayer = document.getElementById('ltx-layer');
+  connLayer.innerHTML = ''; ltxLayer.innerHTML = '';
+  document.getElementById('empty-msg').style.display = currentConfig.length ? 'none' : '';
+
+  currentConfig.forEach(cfg => {
+    const pos = ltxPositions[cfg.index];
+    const sprots = sensorPositions(cfg.count, pos.x, pos.y);
+    const color = PROTO_COLORS[cfg.proto] || '#888';
+    const lw = ltxWidth();
+    const ltxCenterX = pos.x + lw / 2, ltxBotY = pos.y + LTX_H;
+
+    if (cfg.proto === '4-20mA') {
+      sprots.forEach(sp => {
+        const sx = sp.x + SENS_W / 2, sy = sp.y;
+        connLayer.appendChild(el('path', { d: `M${sx},${sy} L${sx},${ltxBotY+10} L${ltxCenterX},${ltxBotY+10} L${ltxCenterX},${ltxBotY}`, fill: 'none', stroke: color, 'stroke-width': '2', 'stroke-opacity': '.8' }));
+      });
+    } else if (sprots.length > 0) {
+      const first = sprots[0];
+      connLayer.appendChild(el('path', { d: `M${ltxCenterX},${ltxBotY} L${ltxCenterX},${ltxBotY+16} L${first.x+SENS_W/2},${ltxBotY+16} L${first.x+SENS_W/2},${first.y}`, fill: 'none', stroke: color, 'stroke-width': '2', 'stroke-opacity': '.8' }));
+      for (let i = 0; i < sprots.length - 1; i++) {
+        const a = sprots[i], b = sprots[i + 1];
+        const ax = a.x + SENS_W / 2, ay = a.y + SENS_H, bx = b.x + SENS_W / 2, by = b.y;
+        let d;
+        if (a.row === b.row) { d = `M${a.x+SENS_W},${a.y+SENS_H/2} L${b.x},${b.y+SENS_H/2}`; }
+        else { const midY = ay + COL_ROW_GAP / 2; d = `M${ax},${ay} L${ax},${midY} L${bx},${midY} L${bx},${by}`; }
+        connLayer.appendChild(el('path', { d, fill: 'none', stroke: color, 'stroke-width': '2', 'stroke-opacity': '.8' }));
+      }
+    }
+  });
+
+  const home = currentConfig.find(c => c.index === 0);
+  if (home) {
+    const homePos = ltxPositions[0];
+    const homeCenterX = homePos.x + ltxWidth() / 2, homeTopY = homePos.y;
+    currentConfig.filter(c => c.index !== 0).forEach(cfg => {
+      const pos = ltxPositions[cfg.index], cx = pos.x + ltxWidth() / 2;
+      const isLora = cfg.conn === 'LoRa', color = isLora ? '#38BDF8' : '#4ADE80';
+      connLayer.appendChild(el('line', { x1: homeCenterX, y1: homeTopY, x2: cx, y2: pos.y, stroke: color, 'stroke-width': '2.5', 'stroke-dasharray': isLora ? '8,5' : '6,4' }));
+      const midX = (homeCenterX + cx) / 2, midY = (homeTopY + pos.y) / 2 - 6;
+      connLayer.appendChild(el('rect', { x: midX-14, y: midY-10, width: 28, height: 13, rx: 2, fill: '#1a1a1f', opacity: '0.8' }));
+      const ltxt = el('text', { x: midX, y: midY, 'text-anchor': 'middle', 'font-size': '9', fill: color, 'font-family': 'IBM Plex Mono, monospace' });
+      ltxt.textContent = isLora ? 'LoRa' : 'Wired';
+      connLayer.appendChild(ltxt);
+    });
+  }
+
+  currentConfig.forEach(cfg => drawLTX(cfg, ltxLayer));
+}
+
+function drawLTX(cfg, layer) {
+  const pos = ltxPositions[cfg.index], lw = ltxWidth();
+  const g = el('g', { class: 'ltx-group', 'data-idx': cfg.index });
+  const isHome = cfg.index === 0, isCellular = isHome && cfg.conn === 'Cellular';
+  const antCount = isCellular ? 2 : 1;
+
+  for (let a = 0; a < antCount; a++) {
+    const ax = pos.x + lw / 2 + (antCount === 2 ? (a === 0 ? -22 : 22) : 0), ay = pos.y;
+    g.appendChild(el('line', { x1: ax, y1: ay, x2: ax, y2: ay-20, stroke: '#888', 'stroke-width': '3', 'stroke-linecap': 'round' }));
+    g.appendChild(el('rect', { x: ax-4, y: ay-26, width: 8, height: 7, rx: 2, fill: '#555' }));
+    if (isCellular && a === 0) {
+      const tipY = ay - 22;
+      [9, 16, 23].forEach((r, ri) => {
+        const ancX = ax - 3;
+        g.appendChild(el('path', { d: `M${ancX},${tipY+r*0.72} A${r},${r} 0 0,1 ${ancX},${tipY-r*0.72}`, fill: 'none', stroke: '#38BDF8', 'stroke-width': '2.2', 'stroke-opacity': String(0.95 - ri * 0.25), 'stroke-linecap': 'round' }));
+      });
+    }
+  }
+
+  if (isHome && cfg.conn === 'Ethernet') {
+    const ex = pos.x + lw / 2, ey = pos.y + LTX_H;
+    g.appendChild(el('line', { x1: ex, y1: ey, x2: ex, y2: ey+14, stroke: '#4ADE80', 'stroke-width': '2.5' }));
+    g.appendChild(el('rect', { x: ex-9, y: ey+14, width: 18, height: 12, rx: 2, fill: '#1a3020', stroke: '#4ADE80', 'stroke-width': '1.5' }));
+    for (let p = 0; p < 4; p++) g.appendChild(el('line', { x1: ex-6+p*4, y1: ey+16, x2: ex-6+p*4, y2: ey+22, stroke: '#4ADE80', 'stroke-width': '1', 'stroke-opacity': '.9' }));
+    const ethlbl = el('text', { x: ex, y: ey+36, 'text-anchor': 'middle', 'font-size': '8', fill: '#4ADE80', 'font-family': 'IBM Plex Mono, monospace' });
+    ethlbl.textContent = 'ETH'; g.appendChild(ethlbl);
+  }
+
+  g.appendChild(el('rect', { x: pos.x, y: pos.y, width: lw, height: LTX_H, rx: 6, fill: '#7a1a28', stroke: '#c03040', 'stroke-width': '1.5' }));
+  const lbl = el('text', { x: pos.x+lw/2, y: pos.y+34, 'text-anchor': 'middle', 'font-size': '15', 'font-weight': '600', fill: '#FFDDDD', 'font-family': 'IBM Plex Sans, sans-serif' });
+  lbl.textContent = cfg.label; g.appendChild(lbl);
+  const sub1 = el('text', { x: pos.x+lw/2, y: pos.y+52, 'text-anchor': 'middle', 'font-size': '9', fill: '#FF9999', 'font-family': 'IBM Plex Mono, monospace' });
+  sub1.textContent = `${cfg.count} × ${cfg.type}  ·  ${cfg.proto}`; g.appendChild(sub1);
+  const sub2 = el('text', { x: pos.x+lw/2, y: pos.y+66, 'text-anchor': 'middle', 'font-size': '9', fill: '#FF9999', 'font-family': 'IBM Plex Mono, monospace' });
+  sub2.textContent = cfg.index === 0 ? `↑ ${cfg.conn}` : `⇄ ${cfg.conn} → Home`; g.appendChild(sub2);
+
+  sensorPositions(cfg.count, pos.x, pos.y).forEach((sp, i) => {
+    const sg = el('g'), key = `${cfg.index}-${i}`;
+    const label = sensorLabels[key] || `${cfg.type.slice(0, 2)}${i + 1}`;
+    const sr = el('rect', { x: sp.x, y: sp.y, width: SENS_W, height: SENS_H, rx: 4, fill: '#0f2a42', stroke: '#38BDF8', 'stroke-width': '1.2', class: 'sensor-rect', 'data-key': key });
+    sg.appendChild(sr);
+    const st = el('text', { x: sp.x+SENS_W/2, y: sp.y+SENS_H/2+4, 'text-anchor': 'middle', 'font-size': '9', fill: '#38BDF8', 'font-family': 'IBM Plex Mono, monospace', 'pointer-events': 'none' });
+    st.textContent = label.substring(0, 6); sg.appendChild(st); g.appendChild(sg);
+  });
+
+  g.addEventListener('mousedown', startDrag);
+  layer.appendChild(g);
+}
+
+function startDrag(e) {
+  if (e.target.classList.contains('sensor-rect')) return;
+  const idx = +e.currentTarget.dataset.idx; dragging = idx;
+  const svg = document.getElementById('svg-canvas');
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+  dragOff.x = svgP.x - ltxPositions[idx].x; dragOff.y = svgP.y - ltxPositions[idx].y;
+  e.preventDefault();
+}
+document.addEventListener('mousemove', e => {
+  if (dragging === null) return;
+  const svg = document.getElementById('svg-canvas');
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+  ltxPositions[dragging] = { x: Math.max(0, svgP.x - dragOff.x), y: Math.max(30, svgP.y - dragOff.y) };
+  draw();
+});
+document.addEventListener('mouseup', () => { dragging = null; });
+
+document.getElementById('svg-canvas').addEventListener('click', e => {
+  const sr = e.target.closest('.sensor-rect');
+  if (!sr) { hideRename(); return; }
+  const key = sr.dataset.key;
+  const popup = document.getElementById('rename-popup'), inp = document.getElementById('rename-input');
+  inp.value = sensorLabels[key] || '';
+  popup.style.display = 'block';
+  popup.style.left = (e.clientX - 270 + 10) + 'px';
+  popup.style.top = (e.clientY + 10) + 'px';
+  inp.dataset.key = key; inp.focus(); inp.select();
+});
+document.getElementById('rename-ok').addEventListener('click', applyRename);
+document.getElementById('rename-input').addEventListener('keydown', e => { if (e.key === 'Enter') applyRename(); if (e.key === 'Escape') hideRename(); });
+function applyRename() { const inp = document.getElementById('rename-input'); if (inp.dataset.key) sensorLabels[inp.dataset.key] = inp.value.trim() || ''; hideRename(); draw(); }
+function hideRename() { document.getElementById('rename-popup').style.display = 'none'; }
+
+document.getElementById('map-btn').addEventListener('click', () => { currentConfig = getConfig(); sensorLabels = {}; ltxPositions = defaultPositions(currentConfig); draw(); });
+document.getElementById('btn-reset').addEventListener('click', () => { if (!currentConfig.length) return; ltxPositions = defaultPositions(currentConfig); draw(); });
+document.getElementById('btn-fit').addEventListener('click', () => { if (!currentConfig.length) return; ltxPositions = defaultPositions(currentConfig); draw(); });
+
+document.getElementById('btn-png').addEventListener('click', () => {
+  const svg = document.getElementById('svg-canvas');
+  const s = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([s], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const scale = 2;
+    canvas.width = svg.clientWidth * scale; canvas.height = svg.clientHeight * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a1a1f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(scale, scale); ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png'); a.download = 'ltx-network-map.png'; a.click();
+  };
+  img.src = url;
+});
+</script>
 </body>
 </html>
